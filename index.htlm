@@ -1,0 +1,472 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Konnen Vil Ayiti</title>
+<style>
+  :root{
+    --navy-deep:#0a1f2e;
+    --navy-mid:#123145;
+    --red:#c8102e;
+    --blue:#00209f;
+    --sand:#f2e6c9;
+    --gold:#e8b84a;
+    --ink:#eef3ee;
+    --ink-dim:#a9c0c9;
+    --card-face:#fdf8ec;
+    --wrong:#c9564a;
+    --ok:#4a9d6f;
+  }
+  *{box-sizing:border-box; -webkit-tap-highlight-color:transparent;}
+  html,body{
+    margin:0; padding:0; height:100%;
+    background: linear-gradient(180deg, var(--navy-mid) 0%, var(--navy-deep) 70%);
+    font-family: Georgia, 'Iowan Old Style', serif;
+    color: var(--ink);
+    overflow:hidden;
+  }
+  .wrap{
+    display:flex; flex-direction:column; align-items:center;
+    height:100%; padding: 18px 16px 22px;
+    max-width: 480px; margin: 0 auto;
+  }
+  header{
+    width:100%; display:flex; justify-content:space-between; align-items:center;
+    margin-bottom: 10px;
+  }
+  h1{
+    font-weight:400; font-size:21px; letter-spacing:0.02em; margin:0;
+    color: var(--sand);
+  }
+  h1 .flag{ display:inline-block; width:16px; height:11px; margin-right:8px; vertical-align:middle;
+    background: linear-gradient(180deg, var(--blue) 50%, var(--red) 50%); border-radius:2px; }
+
+  .langtoggle{
+    display:flex; gap:2px; background: rgba(255,255,255,0.06); border-radius:100px; padding:3px;
+    font-family: system-ui, sans-serif; font-size: 11px; font-weight:600;
+  }
+  .langtoggle button{
+    border:none; background:transparent; color: var(--ink-dim); padding: 5px 10px;
+    border-radius:100px; cursor:pointer; letter-spacing:0.03em;
+  }
+  .langtoggle button.active{ background: var(--gold); color:#2a1c02; }
+
+  /* ---------- Home / level select ---------- */
+  #home{ flex:1; width:100%; display:flex; flex-direction:column; justify-content:center; gap:16px; }
+  .home-sub{ font-family: system-ui, sans-serif; font-size: 13px; color: var(--ink-dim); text-align:center; margin-bottom: 4px; }
+  .level-card{
+    width:100%; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.14);
+    border-radius: 16px; padding: 18px 18px; cursor:pointer; text-align:left;
+    transition: background 0.15s, transform 0.12s;
+  }
+  .level-card:active{ transform: scale(0.98); }
+  .level-card:hover{ background: rgba(255,255,255,0.09); }
+  .level-card .num{ font-family: system-ui, sans-serif; font-size:10px; letter-spacing:0.14em; text-transform:uppercase; color: var(--gold); margin-bottom:6px; }
+  .level-card .title{ font-size: 19px; color: var(--sand); margin-bottom: 4px; }
+  .level-card .desc{ font-family: system-ui, sans-serif; font-size: 12px; color: var(--ink-dim); line-height:1.5; }
+
+  /* ---------- Quiz ---------- */
+  #quiz{ display:none; flex-direction:column; width:100%; height:100%; }
+  #quiz.show{ display:flex; }
+
+  .topline{
+    width:100%; display:flex; justify-content:space-between; align-items:baseline;
+    font-family: system-ui, sans-serif; margin-bottom:6px;
+  }
+  .points{ font-size: 18px; font-weight:700; color: var(--sand); font-family: Georgia, serif; }
+  .streak{ font-size: 10px; color: var(--ok); }
+  .qcount{ font-size: 11px; color: var(--ink-dim); }
+
+  .progressbar{ width:100%; height:3px; border-radius:2px; background: rgba(255,255,255,0.08); margin: 6px 0 8px; overflow:hidden; }
+  .progressbar-fill{ height:100%; background: linear-gradient(90deg, var(--blue), var(--red)); width:0%; transition: width 0.4s ease; }
+  .timerbar{ width:100%; height:5px; border-radius:3px; background: rgba(255,255,255,0.08); margin-bottom: 18px; overflow:hidden; }
+  .timerbar-fill{ height:100%; background: var(--gold); width:100%; transition: width 0.05s linear; }
+
+  .stage{ flex:1; width:100%; display:flex; flex-direction:column; align-items:center; justify-content:center; }
+  .context-eyebrow{ font-family: system-ui, sans-serif; font-size: 10px; letter-spacing:0.14em; text-transform:uppercase; color: var(--ink-dim); margin-bottom: 8px; }
+  .prompt-eyebrow{ font-family: system-ui, sans-serif; font-size: 12px; color: var(--ink-dim); margin-bottom: 10px; text-align:center; }
+  .prompt-word{ font-size: 30px; text-align:center; margin-bottom: 28px; color: var(--sand); line-height:1.2; }
+
+  .options{ width:100%; display:flex; flex-direction:column; gap:11px; }
+  .opt{
+    width:100%; padding: 15px 18px; border-radius: 13px;
+    background: var(--card-face); color:#1c2b28;
+    font-family: Georgia, serif; font-size: 16px; text-align:left;
+    border: 2px solid transparent; cursor:pointer;
+    transition: transform 0.12s, border-color 0.2s, background 0.2s;
+  }
+  .opt:active{ transform: scale(0.98); }
+  .opt.correct{ background: #cfead9; border-color: var(--ok); color:#194d2e; }
+  .opt.wrong{ background: #f4d3cd; border-color: var(--wrong); color:#6e1f14; }
+  .opt.dim{ opacity: 0.5; }
+  .opt.disabled{ pointer-events:none; }
+
+  .feedback{ margin-top: 16px; font-family: system-ui, sans-serif; font-size: 13px; min-height: 18px; text-align:center; }
+  .feedback.ok{ color: #a7e0bc; }
+  .feedback.bad{ color: #f3b39c; }
+
+  .end-screen{
+    position:fixed; inset:0; z-index:5; display:none;
+    align-items:center; justify-content:center; flex-direction:column;
+    background: rgba(6,15,20,0.96); padding: 24px; text-align:center;
+  }
+  .end-screen.show{ display:flex; }
+  .end-screen h2{ font-weight:400; font-size:22px; color: var(--sand); margin-bottom:4px; }
+  .end-screen .finalpoints{ font-size: 50px; color: var(--gold); margin: 10px 0 4px; font-weight:700; font-family: Georgia, serif; }
+  .end-screen .label{ font-family: system-ui, sans-serif; font-size:11px; letter-spacing:0.1em; text-transform:uppercase; color: var(--ink-dim); margin-bottom:22px; }
+  .end-stats{ display:flex; gap:24px; margin-bottom: 24px; }
+  .end-stats div{ font-family: system-ui, sans-serif; text-align:center; }
+  .end-stats .num{ font-size:22px; color: var(--sand); font-family: Georgia, serif; }
+  .end-stats .lbl{ font-size:10px; color: var(--ink-dim); letter-spacing:0.06em; text-transform:uppercase; margin-top:2px; }
+
+  button.ctrl{
+    font-family: system-ui, sans-serif; font-size: 13px; color: var(--ink);
+    background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.18);
+    padding: 12px 24px; border-radius: 100px; cursor:pointer;
+  }
+  button.ctrl:hover{ background: rgba(255,255,255,0.12); }
+  .ctrl-row{ display:flex; gap:10px; }
+  .backlink{
+    font-family: system-ui, sans-serif; font-size: 11px; color: var(--ink-dim);
+    text-decoration: underline; cursor:pointer; margin-top: 10px; background:none; border:none;
+  }
+</style>
+</head>
+<body>
+
+<div class="wrap">
+  <header>
+    <h1><span class="flag"></span>Konnen Vil Ayiti</h1>
+    <div class="langtoggle" id="langToggle">
+      <button data-lang="fr" class="active">FR</button>
+      <button data-lang="cr">KRE</button>
+    </div>
+  </header>
+
+  <div id="home">
+    <div class="home-sub" id="homeSub"></div>
+    <div class="level-card" id="level1Card">
+      <div class="num" id="l1num">NIVO 1</div>
+      <div class="title" id="l1title"></div>
+      <div class="desc" id="l1desc"></div>
+    </div>
+    <div class="level-card" id="level2Card">
+      <div class="num" id="l2num">NIVO 2</div>
+      <div class="title" id="l2title"></div>
+      <div class="desc" id="l2desc"></div>
+    </div>
+  </div>
+
+  <div id="quiz">
+    <div class="topline">
+      <div><div class="points" id="points">0</div><div class="streak" id="streakEl"></div></div>
+      <div class="qcount" id="qcount"></div>
+    </div>
+    <div class="progressbar"><div class="progressbar-fill" id="progressFill"></div></div>
+    <div class="timerbar"><div class="timerbar-fill" id="timerFill"></div></div>
+
+    <div class="stage">
+      <div class="context-eyebrow" id="contextEyebrow"></div>
+      <div class="prompt-eyebrow" id="promptEyebrow"></div>
+      <div class="prompt-word" id="promptWord">—</div>
+      <div class="options" id="options"></div>
+      <div class="feedback" id="feedback"></div>
+    </div>
+    <button class="backlink" id="backBtn"></button>
+  </div>
+</div>
+
+<div class="end-screen" id="endScreen">
+  <h2 id="endTitle"></h2>
+  <div class="finalpoints" id="finalPoints">0</div>
+  <div class="label" id="finalLabel"></div>
+  <div class="end-stats">
+    <div><div class="num" id="correctCount">0</div><div class="lbl" id="correctLbl"></div></div>
+    <div><div class="num" id="bestStreak">0</div><div class="lbl" id="streakLbl"></div></div>
+  </div>
+  <div class="ctrl-row">
+    <button class="ctrl" id="replayBtn"></button>
+    <button class="ctrl" id="homeBtn"></button>
+  </div>
+</div>
+
+<script>
+(function(){
+  "use strict";
+
+  /* ===================== DATA: Departments -> Arrondissements -> Communes ===================== */
+  const DATA = {
+    "Artibonite": {
+      "Dessalines": ["Dessalines","Desdunes","Grande-Saline","Petite-Rivière-de-l'Artibonite"],
+      "Gonaïves": ["Gonaïves","Ennery","L'Estère"],
+      "Gros-Morne": ["Gros-Morne","Anse-Rouge","Terre-Neuve"],
+      "Marmelade": ["Marmelade","Saint-Michel-de-l'Attalaye"],
+      "Saint-Marc": ["Saint-Marc","La Chapelle","Verrettes","Liancourt"]
+    },
+    "Centre": {
+      "Cerca-la-Source": ["Cerca-la-Source","Thomassique"],
+      "Hinche": ["Hinche","Cerca-Carvajal","Maïssade","Thomonde"],
+      "Lascahobas": ["Lascahobas","Belladère","Savanette","Baptiste"],
+      "Mirebalais": ["Mirebalais","Saut-d'Eau","Boucan-Carré"]
+    },
+    "Grand'Anse": {
+      "Anse-d'Hainault": ["Anse-d'Hainault","Dame-Marie","Les Irois"],
+      "Corail": ["Corail","Pestel","Beaumont","Roseaux"],
+      "Jérémie": ["Jérémie","Abricots","Bonbon","Chambellan","Moron","Marfranc"]
+    },
+    "Nippes": {
+      "Anse-à-Veau": ["Anse-à-Veau","Arnaud","L'Asile","Petit-Trou-de-Nippes","Plaisance-du-Sud"],
+      "Baradères": ["Baradères","Grand-Boucan"],
+      "Miragoâne": ["Miragoâne","Fonds-des-Nègres","Paillant","Petite-Rivière-de-Nippes"]
+    },
+    "Nord": {
+      "Acul-du-Nord": ["Acul-du-Nord","Plaine-du-Nord","Milot"],
+      "Borgne": ["Borgne","Port-Margot"],
+      "Cap-Haïtien": ["Cap-Haïtien","Quartier-Morin","Limonade"],
+      "Grande-Rivière-du-Nord": ["Grande-Rivière-du-Nord","Bahon"],
+      "Limbé": ["Limbé","Bas-Limbé"],
+      "Plaisance": ["Plaisance","Pilate"],
+      "Saint-Raphaël": ["Saint-Raphaël","Dondon","Ranquitte","Pignon","La Victoire"]
+    },
+    "Nord-Est": {
+      "Fort-Liberté": ["Fort-Liberté","Ferrier","Perches"],
+      "Ouanaminthe": ["Ouanaminthe","Capotille","Mont-Organisé"],
+      "Trou-du-Nord": ["Trou-du-Nord","Caracol","Sainte-Suzanne","Terrier-Rouge"],
+      "Vallières": ["Vallières","Carice","Mombin-Crochu"]
+    },
+    "Nord-Ouest": {
+      "Môle-Saint-Nicolas": ["Môle-Saint-Nicolas","Baie-de-Henne","Bombardopolis","Jean-Rabel"],
+      "Port-de-Paix": ["Port-de-Paix","Bassin-Bleu","Chansolme","Lapointe","La Tortue"],
+      "Saint-Louis-du-Nord": ["Saint-Louis-du-Nord","Anse-à-Foleur"]
+    },
+    "Ouest": {
+      "Arcahaie": ["Arcahaie","Cabaret"],
+      "Croix-des-Bouquets": ["Croix-des-Bouquets","Ganthier","Thomazeau","Cornillon","Fonds-Verrettes"],
+      "Gonâve": ["Anse-à-Galets","Pointe-à-Raquette"],
+      "Léogâne": ["Léogâne","Petit-Goâve","Grand-Goâve"],
+      "Port-au-Prince": ["Port-au-Prince","Carrefour","Delmas","Pétion-Ville","Kenscoff","Cité Soleil","Gressier","Tabarre"]
+    },
+    "Sud": {
+      "Aquin": ["Aquin","Cavaillon","Saint-Louis-du-Sud"],
+      "Les Cayes": ["Les Cayes","Camp-Perrin","Chantal","Maniche","Île-à-Vache","Torbeck"],
+      "Chardonnières": ["Chardonnières","Les Anglais","Tiburon"],
+      "Côteaux": ["Les Côteaux","Port-à-Piment","Roche-à-Bateau"],
+      "Port-Salut": ["Port-Salut","Arniquet","Saint-Jean-du-Sud"]
+    },
+    "Sud-Est": {
+      "Bainet": ["Bainet","Côtes-de-Fer"],
+      "Belle-Anse": ["Belle-Anse","Anse-à-Pitres","Grand-Gosier","Thiotte"],
+      "Jacmel": ["Jacmel","Cayes-Jacmel","Marigot","La Vallée-de-Jacmel"]
+    }
+  };
+
+  // Flatten helpers
+  const DEPARTMENTS = Object.keys(DATA);
+  const ALL_ARR = []; // {name, dept}
+  const ALL_COMMUNES = []; // {name, arr, dept}
+  for(const dept of DEPARTMENTS){
+    for(const arr of Object.keys(DATA[dept])){
+      ALL_ARR.push({name: arr, dept});
+      for(const commune of DATA[dept][arr]){
+        ALL_COMMUNES.push({name: commune, arr, dept});
+      }
+    }
+  }
+
+  function shuffle(arr){
+    const a = arr.slice();
+    for(let i=a.length-1;i>0;i--){
+      const j = Math.floor(Math.random()*(i+1));
+      [a[i],a[j]] = [a[j],a[i]];
+    }
+    return a;
+  }
+  function pick(arr,n){ return shuffle(arr).slice(0,n); }
+
+  /* ===================== i18n ===================== */
+  const STR = {
+    fr: {
+      homeSub: "Teste tes connaissances sur les découpages territoriaux d'Haïti.",
+      l1num: "NIVEAU 1",
+      l1title: "Les arrondissements",
+      l1desc: "Retrouve à quel département appartient chaque arrondissement.",
+      l2num: "NIVEAU 2",
+      l2title: "Les villes des arrondissements",
+      l2desc: "Retrouve à quel arrondissement appartient chaque commune.",
+      qcount: (i,n)=>`Question ${i} / ${n}`,
+      contextL1: "Département",
+      contextL2: "Arrondissement",
+      promptL1: "Quel arrondissement fait partie de ce département ?",
+      promptL2: "Quelle commune fait partie de cet arrondissement ?",
+      correct: (n)=>`Correct ! +${n} points`,
+      wrong: "Ce n'est pas ça.",
+      timeout: "Temps écoulé.",
+      pointsLbl: "points",
+      endTitle: "Quiz terminé",
+      finalLabel: "points au total",
+      correctLbl: "Bonnes réponses",
+      streakLbl: "Meilleure série",
+      replay: "Rejouer",
+      home: "Menu",
+      back: "← Retour au menu",
+      streak: (n)=>`Série : ${n} 🔥`
+    },
+    cr: {
+      homeSub: "Teste konesans ou sou divizyon teritoryal Ayiti.",
+      l1num: "NIVO 1",
+      l1title: "Awondisman yo",
+      l1desc: "Jwenn nan ki depatman chak awondisman ye.",
+      l2num: "NIVO 2",
+      l2title: "Vil nan awondisman yo",
+      l2desc: "Jwenn nan ki awondisman chak komin ye.",
+      qcount: (i,n)=>`Kesyon ${i} / ${n}`,
+      contextL1: "Depatman",
+      contextL2: "Awondisman",
+      promptL1: "Ki awondisman ki fè pati depatman sa a?",
+      promptL2: "Ki komin ki fè pati awondisman sa a?",
+      correct: (n)=>`Kòrèk! +${n} pwen`,
+      wrong: "Se pa sa.",
+      timeout: "Tan an ekspire.",
+      pointsLbl: "pwen",
+      endTitle: "Kiz la fini",
+      finalLabel: "pwen antou",
+      correctLbl: "Bon repons",
+      streakLbl: "Pi bon seri",
+      replay: "Rekòmanse",
+      home: "Meni",
+      back: "← Tounen nan meni",
+      streak: (n)=>`Seri: ${n} 🔥`
+    }
+  };
+
+  let lang = "fr";
+  function t(key, ...args){
+    const v = STR[lang][key];
+    return typeof v === 'function' ? v(...args) : v;
+  }
+
+  /* ===================== State ===================== */
+  const NUM_QUESTIONS = 15;
+  const ROUND_MS = 8000;
+  const BASE_POINTS = 100;
+
+  let currentLevel = null; // 1 or 2
+  let quiz = [];
+  let qIdx = 0;
+  let points = 0;
+  let correctCount = 0;
+  let streak = 0;
+  let bestStreak = 0;
+  let timerHandle = null;
+  let timerStart = 0;
+  let answered = false;
+
+  /* ===================== Build quiz questions ===================== */
+  function buildLevel1(){
+    const items = pick(ALL_ARR, NUM_QUESTIONS);
+    return items.map(item=>{
+      const wrongPool = ALL_ARR.filter(a=>a.dept!==item.dept);
+      const wrongs = pick(wrongPool,3).map(a=>a.name);
+      const options = shuffle([item.name, ...wrongs]);
+      return { context: item.dept, correct: item.name, options };
+    });
+  }
+  function buildLevel2(){
+    const items = pick(ALL_COMMUNES, NUM_QUESTIONS);
+    return items.map(item=>{
+      // prefer wrong options from same department for difficulty, else any
+      let wrongPool = ALL_COMMUNES.filter(c=>c.arr!==item.arr && c.dept===item.dept);
+      if(wrongPool.length < 3){
+        wrongPool = wrongPool.concat(ALL_COMMUNES.filter(c=>c.arr!==item.arr && c.dept!==item.dept));
+      }
+      const wrongs = pick(wrongPool,3).map(c=>c.name);
+      const options = shuffle([item.name, ...wrongs]);
+      return { context: item.arr, correct: item.name, options };
+    });
+  }
+
+  /* ===================== DOM refs ===================== */
+  const homeEl = document.getElementById('home');
+  const quizEl = document.getElementById('quiz');
+  const endScreen = document.getElementById('endScreen');
+
+  const pointsEl = document.getElementById('points');
+  const streakEl = document.getElementById('streakEl');
+  const qcountEl = document.getElementById('qcount');
+  const progressFill = document.getElementById('progressFill');
+  const timerFill = document.getElementById('timerFill');
+  const contextEyebrow = document.getElementById('contextEyebrow');
+  const promptEyebrow = document.getElementById('promptEyebrow');
+  const promptWord = document.getElementById('promptWord');
+  const optionsEl = document.getElementById('options');
+  const feedback = document.getElementById('feedback');
+
+  function applyStaticText(){
+    document.getElementById('homeSub').textContent = t('homeSub');
+    document.getElementById('l1num').textContent = t('l1num');
+    document.getElementById('l1title').textContent = t('l1title');
+    document.getElementById('l1desc').textContent = t('l1desc');
+    document.getElementById('l2num').textContent = t('l2num');
+    document.getElementById('l2title').textContent = t('l2title');
+    document.getElementById('l2desc').textContent = t('l2desc');
+    document.getElementById('backBtn').textContent = t('back');
+    document.getElementById('endTitle').textContent = t('endTitle');
+    document.getElementById('finalLabel').textContent = t('finalLabel');
+    document.getElementById('correctLbl').textContent = t('correctLbl');
+    document.getElementById('streakLbl').textContent = t('streakLbl');
+    document.getElementById('replayBtn').textContent = t('replay');
+    document.getElementById('homeBtn').textContent = t('home');
+    if(currentLevel) qcountEl.textContent = t('qcount', qIdx+1, quiz.length);
+  }
+
+  document.getElementById('langToggle').addEventListener('click', (e)=>{
+    const btn = e.target.closest('button[data-lang]');
+    if(!btn) return;
+    lang = btn.getAttribute('data-lang');
+    document.querySelectorAll('#langToggle button').forEach(b=>b.classList.toggle('active', b===btn));
+    applyStaticText();
+    if(currentLevel && !answered){
+      // refresh current question labels without changing content
+      contextEyebrow.textContent = (currentLevel===1 ? t('contextL1') : t('contextL2'));
+      promptEyebrow.textContent = (currentLevel===1 ? t('promptL1') : t('promptL2'));
+    }
+  });
+
+  function startLevel(level){
+    currentLevel = level;
+    quiz = level===1 ? buildLevel1() : buildLevel2();
+    qIdx = 0; points = 0; correctCount = 0; streak = 0; bestStreak = 0;
+    homeEl.style.display = 'none';
+    quizEl.classList.add('show');
+    renderQuestion();
+  }
+
+  document.getElementById('level1Card').addEventListener('click', ()=>startLevel(1));
+  document.getElementById('level2Card').addEventListener('click', ()=>startLevel(2));
+  document.getElementById('backBtn').addEventListener('click', goHome);
+
+  function goHome(){
+    clearTimeout(timerHandle);
+    currentLevel = null;
+    quizEl.classList.remove('show');
+    homeEl.style.display = 'flex';
+    endScreen.classList.remove('show');
+  }
+
+  function renderQuestion(){
+    answered = false;
+    feedback.textContent = '';
+    feedback.className = 'feedback';
+    const q = quiz[qIdx];
+    contextEyebrow.textContent = (currentLevel===1 ? t('contextL1') : t('contextL2'));
+    promptEyebrow.textContent = (currentLevel===1 ? t('promptL1') : t('promptL2'));
+    promptWord.textContent = q.context;
+    qcountEl.textContent = t('qcount', qIdx+1, quiz.length);
+    pointsEl.textContent = `${points} ${t('pointsLbl')}`;
+    progressFill.style.width = `${(qIdx/quiz.length)*100}%`;
+
+    optionsEl.innerHTML = '';
+    q.options.forEach(opt=>{
+      const btn = document.createElement('button');
+      b
